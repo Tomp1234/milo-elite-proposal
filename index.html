@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Milo × Elite Vinduspuss</title>
+<meta name="description" content="A short proposal for Elite Vinduspuss. A clear data layer over Salesforce, X-Ledger and 4Human, without rebuilding any of them.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --navy: #0B1A33;
+  --navy-deep: #050D1F;
+  --navy-soft: #19315A;
+  --accent: #F0A500;
+  --accent-soft: #FFC75A;
+  --accent-tint: rgba(240, 165, 0, 0.10);
+  --glass: #4FD1C5;
+  --glass-soft: #7EE8DD;
+  --sky: #5BA8F5;
+  --sky-soft: #8FC5FF;
+  --gradient: linear-gradient(110deg, #19315A 0%, #F0A500 100%);
+  --gradient-soft: linear-gradient(110deg, #5BA8F5 0%, #7EE8DD 60%, #FFC75A 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(91, 168, 245, 0.18) 0%, rgba(126, 232, 221, 0.08) 100%);
+  --white: #FFFFFF;
+  --bg-alt: #F4F8FC;
+  --bg-soft: #FAFBFD;
+  --ink: #07111F;
+  --ink-soft: #1A2434;
+  --ink-dim: #4A5566;
+  --ink-muted: #8A95A5;
+  --line: #E6EAF0;
+  --line-soft: #F0F3F7;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+}
+
+html { font-size: 16px; scroll-behavior: smooth; }
+
+body {
+  background: var(--white);
+  color: var(--ink);
+  font-family: var(--sans);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  font-feature-settings: 'ss01', 'cv11';
+}
+
+.page {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 56px 56px;
+  position: relative;
+}
+
+.band { width: 100%; position: relative; }
+.band-white { background: var(--white); color: var(--ink); }
+.band-alt { background: var(--bg-alt); color: var(--ink); }
+.band-dark { background: var(--navy-deep); color: var(--white); }
+
+/* ── Top bar ─────────────────────────────── */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  opacity: 0;
+  animation: fadeIn 0.8s ease 0.1s forwards;
+  position: relative;
+  z-index: 3;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.topbar-left .sep { opacity: 0.3; font-size: 1rem; }
+
+.milo-logo { display: inline-flex; align-items: center; height: 22px; }
+.milo-logo img { height: 100%; width: auto; display: block; border-radius: 3px; }
+
+.client-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 26px;
+  padding: 0 14px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--navy-deep);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.client-mark .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--sky);
+  box-shadow: 0 0 6px rgba(91, 168, 245, 0.6);
+}
+
+.topbar-right {
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.5;
+  font-weight: 500;
+}
+
+/* ── Hero ─────────────────────────────────── */
+.hero {
+  position: relative;
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.hero-aurora {
+  position: absolute;
+  top: 50%;
+  right: -180px;
+  width: 700px;
+  height: 700px;
+  transform: translateY(-50%);
+  background:
+    radial-gradient(circle at 50% 50%, rgba(91, 168, 245, 0.22) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(25, 49, 90, 0.5) 0%, transparent 70%);
+  filter: blur(70px);
+  pointer-events: none;
+  z-index: 0;
+  animation: auroraDrift 20s ease-in-out infinite;
+}
+
+@keyframes auroraDrift {
+  0%, 100% { transform: translateY(-50%) translateX(0) scale(1); }
+  50% { transform: translateY(-48%) translateX(-30px) scale(1.06); }
+}
+
+/* Window pane grid: deliberately echoes glass facade */
+.hero-windowgrid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 96px 132px;
+  pointer-events: none;
+  z-index: 0;
+  mask-image: radial-gradient(ellipse at center, black 25%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 25%, transparent 80%);
+}
+
+/* Squeegee sweep that runs once on load, like a swipe across glass */
+.hero-sweep {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.hero-sweep::before {
+  content: '';
+  position: absolute;
+  top: -10%;
+  left: -40%;
+  width: 50%;
+  height: 120%;
+  background: linear-gradient(110deg,
+    transparent 0%,
+    rgba(126, 232, 221, 0.08) 30%,
+    rgba(143, 197, 255, 0.18) 50%,
+    rgba(126, 232, 221, 0.08) 70%,
+    transparent 100%);
+  filter: blur(8px);
+  transform: skewX(-18deg);
+  animation: sweep 4.5s ease-out 0.4s 1 forwards;
+}
+
+@keyframes sweep {
+  0% { left: -40%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { left: 130%; opacity: 0; }
+}
+
+/* Floating droplets */
+.hero-drops {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.drop {
+  position: absolute;
+  width: 8px;
+  height: 12px;
+  background: linear-gradient(180deg, rgba(143, 197, 255, 0.7) 0%, rgba(126, 232, 221, 0.4) 100%);
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  filter: blur(0.5px);
+  opacity: 0;
+  animation: dropFall 6s ease-in infinite;
+  box-shadow: 0 0 6px rgba(143, 197, 255, 0.4);
+}
+
+.drop:nth-child(1) { top: 8%;  left: 14%; animation-delay: 0s;   transform: scale(0.9); }
+.drop:nth-child(2) { top: 12%; left: 78%; animation-delay: 1.4s; transform: scale(1.1); }
+.drop:nth-child(3) { top: 4%;  left: 56%; animation-delay: 2.6s; transform: scale(0.7); }
+.drop:nth-child(4) { top: 18%; left: 32%; animation-delay: 3.8s; transform: scale(1); }
+.drop:nth-child(5) { top: 6%;  left: 88%; animation-delay: 0.8s; transform: scale(0.8); }
+
+@keyframes dropFall {
+  0% { transform: translateY(0) scale(var(--s, 1)); opacity: 0; }
+  10% { opacity: 0.9; }
+  85% { opacity: 0.6; }
+  100% { transform: translateY(420px) scale(var(--s, 1)); opacity: 0; }
+}
+
+/* Glass facade silhouette at the bottom of the hero */
+.hero-facade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 240px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.55;
+  mask-image: linear-gradient(180deg, transparent 0%, black 35%, black 100%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, black 35%, black 100%);
+}
+
+.hero-facade svg { width: 100%; height: 100%; display: block; }
+
+.hero-facade .pane {
+  fill: rgba(143, 197, 255, 0.08);
+  stroke: rgba(143, 197, 255, 0.18);
+  stroke-width: 0.6;
+}
+
+.hero-facade .pane.lit {
+  fill: rgba(255, 199, 90, 0.32);
+  animation: paneTwinkle 6s ease-in-out infinite;
+}
+
+.hero-facade .pane.lit.b { animation-delay: 1.2s; }
+.hero-facade .pane.lit.c { animation-delay: 2.4s; }
+.hero-facade .pane.lit.d { animation-delay: 3.6s; }
+.hero-facade .pane.lit.e { animation-delay: 0.6s; }
+
+@keyframes paneTwinkle {
+  0%, 100% { fill: rgba(255, 199, 90, 0.18); }
+  50% { fill: rgba(255, 199, 90, 0.55); }
+}
+
+/* A tiny abseiling rope-access figure on the facade */
+.hero-facade .rope {
+  stroke: rgba(255, 255, 255, 0.45);
+  stroke-width: 0.5;
+  stroke-dasharray: 1.4 1.4;
+  fill: none;
+}
+
+.hero-facade .climber {
+  fill: rgba(255, 199, 90, 0.85);
+  animation: climberDrop 14s ease-in-out infinite;
+}
+
+@keyframes climberDrop {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(60px); }
+  100% { transform: translateY(0); }
+}
+
+/* Soap bubbles drifting upward (used in lighter bands) */
+.bubbles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.bubble {
+  position: absolute;
+  bottom: -40px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.85) 0%, rgba(143, 197, 255, 0.25) 50%, rgba(91, 168, 245, 0.0) 80%);
+  border: 1px solid rgba(143, 197, 255, 0.35);
+  box-shadow: inset 2px 2px 4px rgba(255, 255, 255, 0.6), 0 0 6px rgba(143, 197, 255, 0.15);
+  opacity: 0;
+  animation: bubbleRise 14s linear infinite;
+}
+
+.bubble:nth-child(1) { left: 8%;  width: 14px; height: 14px; animation-delay: 0s;   animation-duration: 16s; }
+.bubble:nth-child(2) { left: 22%; width: 22px; height: 22px; animation-delay: 3s;   animation-duration: 13s; }
+.bubble:nth-child(3) { left: 44%; width: 10px; height: 10px; animation-delay: 6s;   animation-duration: 18s; }
+.bubble:nth-child(4) { left: 64%; width: 26px; height: 26px; animation-delay: 1.5s; animation-duration: 15s; }
+.bubble:nth-child(5) { left: 78%; width: 16px; height: 16px; animation-delay: 9s;   animation-duration: 14s; }
+.bubble:nth-child(6) { left: 90%; width: 12px; height: 12px; animation-delay: 4.5s; animation-duration: 17s; }
+
+@keyframes bubbleRise {
+  0%   { transform: translateY(0) translateX(0);  opacity: 0; }
+  8%   { opacity: 0.6; }
+  50%  { transform: translateY(-50vh) translateX(20px); }
+  92%  { opacity: 0.4; }
+  100% { transform: translateY(-100vh) translateX(-15px); opacity: 0; }
+}
+
+/* Squeegee divider between bands */
+.squeegee-divider {
+  position: relative;
+  height: 6px;
+  background: linear-gradient(90deg, transparent 0%, rgba(91, 168, 245, 0.25) 20%, rgba(126, 232, 221, 0.5) 50%, rgba(91, 168, 245, 0.25) 80%, transparent 100%);
+  overflow: hidden;
+}
+
+.squeegee-divider::before {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  left: -10%;
+  width: 18%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.85), transparent);
+  filter: blur(2px);
+  animation: squeegeeSlide 6s ease-in-out infinite;
+}
+
+@keyframes squeegeeSlide {
+  0%   { left: -20%; }
+  60%  { left: 110%; }
+  100% { left: 110%; }
+}
+
+/* ── Reveal: smudge → clean ─────────────── */
+.reveal-block {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--navy-deep);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 30px 80px rgba(7, 17, 31, 0.22);
+  min-height: 360px;
+}
+
+.reveal-pane {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.reveal-side {
+  padding: 36px 36px 32px;
+  position: relative;
+}
+
+.reveal-side .reveal-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.reveal-side .reveal-tag::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.reveal-side.dirty {
+  background: linear-gradient(135deg, rgba(120, 60, 30, 0.18) 0%, rgba(80, 50, 30, 0.05) 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.reveal-side.dirty .reveal-tag {
+  color: #FFB088;
+}
+.reveal-side.dirty .reveal-tag::before {
+  background: #C56B3A;
+  box-shadow: 0 0 8px rgba(197, 107, 58, 0.6);
+}
+
+.reveal-side.clean {
+  background: linear-gradient(135deg, rgba(91, 168, 245, 0.1) 0%, rgba(126, 232, 221, 0.04) 100%);
+}
+
+.reveal-side.clean .reveal-tag {
+  color: var(--glass-soft);
+}
+.reveal-side.clean .reveal-tag::before {
+  background: var(--glass);
+  box-shadow: 0 0 8px rgba(79, 209, 197, 0.6);
+}
+
+.reveal-side h4 {
+  font-size: 1.05rem;
+  color: var(--white);
+  margin-bottom: 18px;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+}
+
+.reveal-fields {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reveal-fields li {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.55);
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.reveal-fields li .v {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.reveal-clean-text {
+  font-size: 1.05rem;
+  color: var(--white);
+  line-height: 1.6;
+  margin-bottom: 14px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+
+.reveal-clean-text .stat {
+  font-family: var(--mono);
+  background: var(--gradient-soft);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 700;
+}
+
+.reveal-clean-cite {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 0.02em;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.reveal-clean-cite::before {
+  content: 'cite ↳ ';
+  color: var(--glass-soft);
+}
+
+/* The squeegee bar that sweeps and reveals */
+.squeegee-bar {
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 0;
+  width: 4px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(143, 197, 255, 0.7) 50%, rgba(255, 255, 255, 0.95) 100%);
+  box-shadow: 0 0 24px rgba(143, 197, 255, 0.55), 0 0 8px rgba(255, 255, 255, 0.6);
+  z-index: 4;
+  pointer-events: none;
+  transition: left 1.6s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.squeegee-bar::before {
+  content: '';
+  position: absolute;
+  top: -20px; bottom: -20px;
+  left: -22px;
+  width: 22px;
+  background: linear-gradient(90deg, transparent, rgba(91, 168, 245, 0.18), rgba(143, 197, 255, 0.35));
+  filter: blur(6px);
+}
+
+.squeegee-bar::after {
+  content: '';
+  position: absolute;
+  top: -20px; bottom: -20px;
+  right: -10px;
+  width: 10px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.4), transparent);
+  filter: blur(3px);
+}
+
+/* The smudge overlay sitting on the clean side until squeegee passes */
+.smudge-overlay {
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 0; right: 0;
+  background:
+    radial-gradient(circle at 25% 30%, rgba(120, 70, 30, 0.35) 0%, transparent 35%),
+    radial-gradient(circle at 70% 60%, rgba(140, 90, 40, 0.28) 0%, transparent 40%),
+    radial-gradient(circle at 45% 80%, rgba(160, 110, 60, 0.18) 0%, transparent 30%),
+    linear-gradient(120deg, rgba(80, 50, 30, 0.5) 0%, rgba(60, 40, 20, 0.25) 100%);
+  filter: blur(0.5px);
+  z-index: 3;
+  pointer-events: none;
+  transition: clip-path 1.6s cubic-bezier(0.65, 0, 0.35, 1);
+  clip-path: inset(0 0 0 0);
+  mix-blend-mode: screen;
+}
+
+.reveal-block.swept .squeegee-bar { left: 100%; }
+.reveal-block.swept .smudge-overlay { clip-path: inset(0 0 0 100%); }
+
+.reveal-foot {
+  padding: 14px 24px;
+  background: rgba(0, 0, 0, 0.35);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  color: rgba(255, 255, 255, 0.6);
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+
+.reveal-foot strong { color: var(--glass-soft); }
+
+.hero-content { position: relative; z-index: 2; }
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.72rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--sky-soft);
+  margin-bottom: 28px;
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.eyebrow::before {
+  content: '';
+  width: 28px;
+  height: 1px;
+  background: var(--gradient-soft);
+}
+
+h1 {
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: clamp(2.2rem, 5.2vw, 3.8rem);
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  margin-bottom: 20px;
+  opacity: 0;
+  transform: translateY(12px);
+  max-width: 880px;
+}
+
+h1 .em {
+  font-weight: 300;
+  font-style: italic;
+  background: var(--gradient-soft);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: -0.02em;
+}
+
+.hero-sub {
+  font-size: 1.04rem;
+  color: rgba(255, 255, 255, 0.72);
+  max-width: 660px;
+  line-height: 1.6;
+  font-weight: 400;
+  margin-bottom: 0;
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.hero-sub strong { color: var(--white); font-weight: 600; }
+
+/* ── Sections ────────────────────────────── */
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.7rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--navy-soft);
+  margin-bottom: 14px;
+}
+
+.kicker::before {
+  content: '';
+  width: 28px;
+  height: 1px;
+  background: var(--gradient);
+}
+
+.band-dark .kicker { color: var(--sky-soft); }
+.band-dark .kicker::before { background: var(--gradient-soft); }
+
+h2 {
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: clamp(1.6rem, 3.2vw, 2.3rem);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  margin-bottom: 14px;
+  max-width: 860px;
+}
+
+h2 .em {
+  font-weight: 300;
+  font-style: italic;
+  letter-spacing: -0.02em;
+  background: var(--gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.band-dark h2 .em { background: var(--gradient-soft); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+h3 {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: 1.18rem;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  margin-bottom: 10px;
+}
+
+.lede {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--ink-dim);
+  max-width: 760px;
+  margin-bottom: 28px;
+  font-weight: 400;
+}
+
+.band-dark .lede { color: rgba(255, 255, 255, 0.68); }
+
+p strong, li strong { font-weight: 700; color: var(--ink); }
+.band-dark p strong, .band-dark li strong { color: var(--white); }
+
+/* ── Heard cards ────────────────────────── */
+.heard {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.heard-cell {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 22px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.heard-cell::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--gradient);
+  opacity: 0.7;
+}
+
+.heard-num {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  font-weight: 500;
+  margin-bottom: 10px;
+  letter-spacing: 0.08em;
+}
+
+.heard-cell p {
+  font-size: 0.92rem;
+  color: var(--ink-dim);
+  line-height: 1.6;
+}
+
+.heard-cell .quote {
+  font-style: italic;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+/* ── Stack (integrations) ─────────────── */
+.stack {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.stack-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 26px 24px 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stack-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--gradient-soft);
+  opacity: 0.7;
+}
+
+.stack-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.stack-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(91, 168, 245, 0.12);
+  border: 1px solid rgba(91, 168, 245, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--sky-soft);
+  flex-shrink: 0;
+}
+
+.stack-icon svg { width: 20px; height: 20px; }
+
+.stack-name {
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 700;
+}
+
+.stack-card h3 {
+  font-size: 1.08rem;
+  margin-bottom: 10px;
+  color: var(--white);
+}
+
+.stack-card p {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.6;
+}
+
+.stack-tag {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 4px 10px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  background: rgba(240, 165, 0, 0.12);
+  color: var(--accent-soft);
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.stack-tag.tag-glass {
+  background: rgba(126, 232, 221, 0.12);
+  color: var(--glass-soft);
+}
+
+/* ── Two-up grid ─ */
+.duo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.duo-card {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 22px 24px;
+}
+
+.band-dark .duo-card {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.duo-card h3 {
+  font-size: 1.08rem;
+  margin-bottom: 12px;
+  letter-spacing: -0.01em;
+}
+
+.duo-card ul, .duo-card p {
+  font-size: 0.92rem;
+  color: var(--ink-dim);
+  line-height: 1.6;
+}
+
+.band-dark .duo-card ul, .band-dark .duo-card p {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.duo-card ul { list-style: none; padding: 0; }
+
+.duo-card li {
+  position: relative;
+  padding-left: 18px;
+  margin-bottom: 8px;
+}
+
+.duo-card li::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0.6em;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* ── Pilot weeks ─────────────────────────── */
+.pilot {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.pilot-cell {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px 20px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.pilot-num {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+  min-width: 28px;
+}
+
+.pilot-cell p {
+  font-size: 0.92rem;
+  color: var(--ink-dim);
+  line-height: 1.55;
+}
+
+/* ── Commercials ─────────────────────────── */
+.comm {
+  background: var(--navy-deep);
+  color: var(--white);
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 60px rgba(7, 17, 31, 0.18);
+}
+
+.comm-top {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 0;
+}
+
+.comm-headline {
+  padding: 28px 32px;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.comm-headline::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 240px; height: 240px;
+  background: radial-gradient(circle, rgba(91, 168, 245, 0.22) 0%, transparent 70%);
+  filter: blur(40px);
+}
+
+.comm-price {
+  font-size: 3.2rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  background: var(--gradient-soft);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 10px;
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.comm-price-unit {
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  background: none;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.55);
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.comm-price-sub {
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 26px;
+  position: relative;
+}
+
+.comm-includes {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+.comm-includes li {
+  font-size: 0.92rem;
+  color: rgba(255, 255, 255, 0.82);
+  padding-left: 22px;
+  position: relative;
+  line-height: 1.5;
+}
+
+.comm-includes li::before {
+  content: '✓';
+  position: absolute;
+  left: 0; top: 0;
+  color: var(--glass-soft);
+  font-weight: 700;
+  font-size: 0.86rem;
+}
+
+.comm-terms {
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.comm-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.comm-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+.comm-row-label {
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sky-soft);
+  font-weight: 700;
+}
+
+.comm-row-value {
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.92);
+  line-height: 1.5;
+}
+
+.comm-row-value strong { color: var(--white); font-weight: 700; }
+
+.comm-bottom {
+  padding: 16px 32px;
+  background: rgba(0, 0, 0, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.86rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+}
+
+.comm-bottom strong { color: var(--glass-soft); }
+
+/* ── Snakk side note ─────────────────────── */
+.snakk {
+  background: linear-gradient(120deg, rgba(91, 168, 245, 0.06) 0%, rgba(126, 232, 221, 0.04) 100%);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--sky);
+  border-radius: 8px;
+  padding: 24px 28px;
+}
+
+.snakk-tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--navy-soft);
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+.snakk h3 {
+  font-size: 1.15rem;
+  margin-bottom: 10px;
+}
+
+.snakk p {
+  font-size: 0.94rem;
+  color: var(--ink-dim);
+  line-height: 1.65;
+}
+
+.snakk p + p { margin-top: 8px; }
+
+/* ── Footer ──────────────────────────────── */
+.footer {
+  background: var(--navy-deep);
+  color: var(--white);
+  padding: 64px 56px 56px;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.footer::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  width: 800px; height: 200px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center top, rgba(91, 168, 245, 0.18) 0%, transparent 70%);
+  filter: blur(40px);
+  pointer-events: none;
+}
+
+.footer-mark {
+  font-family: var(--sans);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  background: var(--gradient-soft);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.footer-line {
+  font-size: 1.05rem;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 580px;
+  margin: 0 auto 28px;
+  line-height: 1.55;
+  position: relative;
+}
+
+.footer-line strong { color: var(--white); font-weight: 600; }
+
+.footer-meta {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.footer-meta .sep { padding: 0 10px; opacity: 0.4; }
+
+.footer-contact { font-size: 0.84rem; color: rgba(255, 255, 255, 0.55); position: relative; }
+.footer-contact a { color: var(--sky-soft); text-decoration: none; }
+.footer-contact a:hover { text-decoration: underline; }
+
+/* ── Animations ──────────────────────────── */
+@keyframes fadeIn { to { opacity: 1; } }
+
+.animate-target { transition: opacity 0.7s ease, transform 0.7s ease; }
+.animate-target.animate-in { opacity: 1 !important; transform: translateY(0) !important; }
+
+/* ── Responsive ──────────────────────────── */
+@media (max-width: 820px) {
+  .page { padding: 64px 28px; }
+  .heard, .stack, .duo-grid, .pilot, .comm-top { grid-template-columns: 1fr; }
+  .comm-headline { border-right: none; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+  .reveal-pane { grid-template-columns: 1fr; }
+  .reveal-side.dirty { border-right: none; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
+  .squeegee-bar { display: none; }
+  .smudge-overlay { clip-path: inset(50% 0 0 0); }
+  .reveal-block.swept .smudge-overlay { clip-path: inset(100% 0 0 0); }
+  .hero-facade { height: 160px; }
+}
+
+/* ── Print ───────────────────────────────── */
+@media print {
+  .hero-aurora, .hero-windowgrid, .hero-sweep, .hero-drops, .footer::before { display: none; }
+  .band-dark { background: white !important; color: var(--ink) !important; }
+  .band-dark h2, .band-dark h2 .em, .band-dark .lede, .band-dark p, .band-dark li { color: var(--ink) !important; }
+  .band-dark .kicker { color: var(--navy-soft) !important; }
+  .stack-card { background: white !important; border-color: var(--line) !important; }
+  .stack-card h3, .stack-card p, .stack-name { color: var(--ink) !important; }
+  .comm, .comm-headline, .comm-terms, .comm-bottom { background: white !important; color: var(--ink) !important; }
+  .footer { background: white !important; color: var(--ink-dim) !important; }
+  .page { padding: 36px 32px; }
+  section { page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="band band-dark">
+  <div class="page">
+    <div class="hero-aurora"></div>
+    <div class="hero-windowgrid"></div>
+    <div class="hero-sweep"></div>
+    <div class="hero-drops">
+      <span class="drop"></span>
+      <span class="drop"></span>
+      <span class="drop"></span>
+      <span class="drop"></span>
+      <span class="drop"></span>
+    </div>
+    <div class="hero-facade" aria-hidden="true">
+      <svg viewBox="0 0 1200 240" preserveAspectRatio="xMidYMax slice">
+        <defs>
+          <pattern id="grid-a" x="0" y="0" width="22" height="32" patternUnits="userSpaceOnUse">
+            <rect class="pane" x="2" y="2" width="18" height="28" rx="1"/>
+          </pattern>
+          <pattern id="grid-b" x="0" y="0" width="18" height="26" patternUnits="userSpaceOnUse">
+            <rect class="pane" x="2" y="2" width="14" height="22" rx="1"/>
+          </pattern>
+          <pattern id="grid-c" x="0" y="0" width="26" height="36" patternUnits="userSpaceOnUse">
+            <rect class="pane" x="3" y="3" width="20" height="30" rx="1"/>
+          </pattern>
+        </defs>
+
+        <!-- back row of buildings -->
+        <rect x="0"   y="120" width="160" height="120" fill="url(#grid-c)"/>
+        <rect x="160" y="90"  width="120" height="150" fill="url(#grid-a)"/>
+        <rect x="280" y="140" width="80"  height="100" fill="url(#grid-b)"/>
+        <rect x="360" y="60"  width="180" height="180" fill="url(#grid-a)"/>
+        <rect x="540" y="110" width="110" height="130" fill="url(#grid-c)"/>
+        <rect x="650" y="40"  width="160" height="200" fill="url(#grid-a)"/>
+        <rect x="810" y="100" width="90"  height="140" fill="url(#grid-b)"/>
+        <rect x="900" y="70"  width="150" height="170" fill="url(#grid-c)"/>
+        <rect x="1050" y="120" width="150" height="120" fill="url(#grid-a)"/>
+
+        <!-- a few "lit / freshly-cleaned" panes that twinkle -->
+        <rect class="pane lit"   x="386" y="84"  width="14" height="22" rx="1"/>
+        <rect class="pane lit b" x="430" y="106" width="14" height="22" rx="1"/>
+        <rect class="pane lit c" x="468" y="138" width="14" height="22" rx="1"/>
+        <rect class="pane lit d" x="676" y="64"  width="14" height="22" rx="1"/>
+        <rect class="pane lit e" x="730" y="116" width="14" height="22" rx="1"/>
+        <rect class="pane lit b" x="938" y="98"  width="20" height="30" rx="1"/>
+        <rect class="pane lit"   x="998" y="148" width="20" height="30" rx="1"/>
+        <rect class="pane lit c" x="116" y="148" width="20" height="30" rx="1"/>
+
+        <!-- abseiling rope + climber on the tallest building -->
+        <line class="rope" x1="730" y1="40" x2="730" y2="240"/>
+        <g class="climber">
+          <circle cx="730" cy="100" r="2.4"/>
+          <rect x="727" y="103" width="6" height="7" rx="1"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="topbar hero-content">
+      <div class="topbar-left">
+        <a href="#" class="milo-logo" aria-label="Milo">
+          <img src="https://raw.githubusercontent.com/Tomp1234/proposals/main/quay-tickets-proposal/milo-logo.jpeg" alt="Milo">
+        </a>
+        <span class="sep">×</span>
+        <span class="client-mark"><span class="dot"></span>ELITE</span>
+      </div>
+      <div class="topbar-right">May 2026</div>
+    </div>
+
+    <div class="hero">
+      <div class="hero-content">
+        <div class="eyebrow animate-target">A short proposal · Prepared after the call with Liam</div>
+        <h1 class="animate-target">
+          A clear view across Salesforce, X-Ledger and 4Human. <span class="em">Without rebuilding any of them.</span>
+        </h1>
+        <p class="hero-sub animate-target">
+          You spent two and a half years and 1.5 million kroner getting Salesforce to fit Elite. The point of Milo isn't to do that again. It sits on top, reads what's there, joins it to X-Ledger and 4Human, and answers questions in plain English. <strong>Test it for two weeks, no fee, no commitment.</strong>
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT WE HEARD -->
+<div class="squeegee-divider" aria-hidden="true"></div>
+<section class="band band-alt" style="position: relative; overflow: hidden;">
+  <div class="bubbles" aria-hidden="true">
+    <span class="bubble"></span>
+    <span class="bubble"></span>
+    <span class="bubble"></span>
+    <span class="bubble"></span>
+    <span class="bubble"></span>
+    <span class="bubble"></span>
+  </div>
+  <div class="page" style="position: relative; z-index: 1;">
+    <div class="kicker">What we heard on the call</div>
+    <h2>The user interface is the problem, <span class="em">not the data.</span></h2>
+    <p class="lede">
+      Norway's largest window cleaner, headquartered in Stavanger, around 75 people across west, south and east, roughly 50,000 assignments a year across 11,500 addresses. The data exists. Pulling it out, in a form humans can read, is what hurts.
+    </p>
+
+    <div class="heard">
+      <div class="heard-cell">
+        <div class="heard-num">01</div>
+        <p class="quote">"I hate it from the bottom of my heart, but I can't change now."</p>
+        <p>The Salesforce build ended at 1.5 million kroner over two and a half years of your time and your brother's. Replacing it isn't on the table. Working around it is.</p>
+      </div>
+      <div class="heard-cell">
+        <div class="heard-num">02</div>
+        <p class="quote">"Work orders, child work orders, switching workers, constant mess."</p>
+        <p>Parent and child orders, reassignments, dates moving. The data shape is unusual and it's not clean. Milo is built for that case, not the textbook one.</p>
+      </div>
+      <div class="heard-cell">
+        <div class="heard-num">03</div>
+        <p class="quote">"X-Ledger has even worse UX than Salesforce."</p>
+        <p>Accounts in X-Ledger, HR in 4Human. Three systems, three logins, no single place to ask a question that crosses them.</p>
+      </div>
+      <div class="heard-cell">
+        <div class="heard-num">04</div>
+        <p class="quote">"Useful for me and the top four. Maybe later for the workers."</p>
+        <p>Start with you, your brother and middle management. Once it's earning its keep, push it down to the people closest to the work orders.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SQUEEGEE REVEAL -->
+<div class="squeegee-divider" aria-hidden="true"></div>
+<section class="band band-dark">
+  <div class="page">
+    <div class="kicker">Same data. Different surface.</div>
+    <h2>One question. <span class="em">Drag the squeegee.</span></h2>
+    <p class="lede">
+      Same Salesforce, same work order, same Tuesday morning. On the left, what you'd be staring at today. On the right, what Milo turns it into. Click the block (or scroll past it) to wipe.
+    </p>
+
+    <div class="reveal-block" id="revealBlock" role="button" tabindex="0" aria-label="Sweep the squeegee to reveal the answer">
+      <div class="reveal-pane">
+        <div class="reveal-side dirty">
+          <span class="reveal-tag">Salesforce, today</span>
+          <h4>WorkOrder list view, opened cold.</h4>
+          <ul class="reveal-fields">
+            <li>WO-00184221 <span class="v">· Status: In Progress</span></li>
+            <li>ParentWO__c: WO-00184220 <span class="v">· Custom_Field_47__c: TRUE</span></li>
+            <li>AssignedResource: 005Hb000003fXyZ <span class="v">· Reassigned: 2x</span></li>
+            <li>Due_Date__c: 2026-05-12 <span class="v">· Original_Due__c: 2026-05-04</span></li>
+            <li>Site_Account__c: 0014x000004hL2A <span class="v">· Region__c: Vest</span></li>
+            <li>...and 41 more columns</li>
+            <li>+ open three reports + a saved view</li>
+          </ul>
+        </div>
+        <div class="reveal-side clean">
+          <span class="reveal-tag">Milo, in plain English</span>
+          <h4>"How many open work orders have no cleaner assigned this week?"</h4>
+          <p class="reveal-clean-text">
+            <span class="stat">37</span> open work orders across the three regions have no resource assigned for this week. <span class="stat">22</span> are in Vest, <span class="stat">11</span> in Sør, <span class="stat">4</span> in Øst. Of those, <span class="stat">14</span> are child orders whose parent is already past its original due date.
+          </p>
+          <div class="reveal-clean-cite">
+            Salesforce · WorkOrder, AssignedResource, Region__c, ParentWO__c
+          </div>
+        </div>
+        <div class="smudge-overlay" aria-hidden="true"></div>
+        <div class="squeegee-bar" aria-hidden="true"></div>
+      </div>
+      <div class="reveal-foot">
+        <strong>Click anywhere on the block</strong> to wipe it again.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT MILO IS -->
+<div class="squeegee-divider" aria-hidden="true"></div>
+<section class="band band-dark">
+  <div class="page">
+    <div class="kicker">What Milo is, and isn't</div>
+    <h2>A fast analyst that reads your systems. <span class="em">Not another CRM.</span></h2>
+    <p class="lede">
+      Think of Salesforce as the file cabinet. Milo is the analyst who picks up the files, reads them, joins them to X-Ledger and 4Human, and answers the question you actually had. Same agent on web, Slack, WhatsApp or Teams.
+    </p>
+
+    <div class="duo-grid">
+      <div class="duo-card">
+        <h3>What Milo does</h3>
+        <ul>
+          <li>Reads your data across Salesforce, X-Ledger, 4Human, anything else with an API.</li>
+          <li>Answers questions in plain English. Revenue by department, work orders without an assigned cleaner, hours by employee, debtor ageing.</li>
+          <li>Builds dashboards, scheduled reports, automations. One place, one login.</li>
+          <li>Learns your structure once in our Data Studio. Parent and child work orders, custom Salesforce fields, the exceptions, all stored as persistent context so the agent doesn't relearn them on every question.</li>
+          <li>Runs deterministic code for anything numerical. Same question, same answer, every time. Useful when the answer is going to a board or an auditor.</li>
+        </ul>
+      </div>
+      <div class="duo-card">
+        <h3>What Milo doesn't do</h3>
+        <ul>
+          <li>It doesn't replace Salesforce. You keep your records of truth where they are.</li>
+          <li>By default it doesn't write back. Read-only on every connection unless you turn writes on for a specific use case.</li>
+          <li>It isn't a generic ChatGPT wrapper. It only sees your connected sources, never the open internet.</li>
+          <li>It isn't a six-month integration project. Salesforce is plug-and-play. The other two take a day each.</li>
+          <li>It isn't capacity-bound on data volume. The LLM never sees your rows, only the schema and the result set, so a window cleaning company is comfortably within the envelope we built for billions of iGaming transactions.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REFERENCE / TRACK RECORD -->
+<div class="squeegee-divider" aria-hidden="true"></div>
+<section class="band band-white">
+  <div class="page">
+    <div class="kicker">Why this works for messy, custom data</div>
+    <h2>Built for BetGames. <span class="em">Sized for everyone since.</span></h2>
+    <p class="lede">
+      Milo's first deployment was BetGames in iGaming. Hundreds of disparate technologies, billions of transactions a day, a Power BI estate that nobody could get a straight answer out of. They migrated entirely off Power BI onto Milo. The reason it works for that case is the same reason it works for yours: the agent doesn't care how unusual your shape is, because the structure lives in the Data Studio rather than being asked of the model on every query.
+    </p>
+
+    <div class="duo-grid">
+      <div class="duo-card" style="background: var(--bg-alt);">
+        <h3>Persistent context, not stateless prompts</h3>
+        <p>Most "AI on top of your CRM" demos forget your schema between sessions. Milo's Data Studio is the part that remembers. Tables, joins, custom fields, business definitions, the parent-child rule for work orders. Configured once, referenced on every query.</p>
+      </div>
+      <div class="duo-card" style="background: var(--bg-alt);">
+        <h3>Deterministic compute on top of an LLM</h3>
+        <p>The model picks the question, then a code engine runs the answer. So "how many open work orders without a cleaner assigned" returns the same number tomorrow as today, with a query you can audit. No tokenwise arithmetic, no drift.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- THE STACK / INTEGRATIONS -->
+<div class="squeegee-divider" aria-hidden="true"></div>
+<section class="band band-alt" style="position: relative; overflow: hidden;">
+  <div class="bubbles" aria-hidden="true">
+    <span class="bubble"></span>
+    <span class="bubble"></span>
+    <span class="bubble"></span>
+    <span class="bubble"></span>
+    <span class="bubble"></span>
+    <span class="bubble"></span>
+  </div>
+  <div class="page" style="position: relative; z-index: 1;">
+    <div class="kicker">Your stack, connected</div>
+    <h2>Three systems. <span class="em">One question box.</span></h2>
+    <p class="lede">
+      We already have Salesforce as a built-in connector. X-Ledger and 4Human both publish open APIs. Both are well-documented. Both will be built in for you at no charge.
+    </p>
+
+    <div class="stack" style="--card-bg: var(--white);">
+      <div class="stack-card" style="background: var(--white); border-color: var(--line);">
+        <div class="stack-card-head">
+          <div class="stack-icon" style="background: rgba(0, 161, 224, 0.08); border-color: rgba(0, 161, 224, 0.25); color: #0079B8;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+          </div>
+          <span class="stack-name" style="color: var(--ink-muted);">Salesforce</span>
+        </div>
+        <h3 style="color: var(--ink);">Plug and play</h3>
+        <p style="color: var(--ink-dim);">Built-in connector. We synchronise contacts, accounts, work orders, parent and child records, custom fields. No mapping work for your team.</p>
+        <span class="stack-tag tag-glass">Day 1</span>
+      </div>
+
+      <div class="stack-card" style="background: var(--white); border-color: var(--line);">
+        <div class="stack-card-head">
+          <div class="stack-icon" style="background: rgba(255, 110, 60, 0.08); border-color: rgba(255, 110, 60, 0.25); color: #C84A1F;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 4v16"/></svg>
+          </div>
+          <span class="stack-name" style="color: var(--ink-muted);">X-Ledger</span>
+        </div>
+        <h3 style="color: var(--ink);">Built free, in a day</h3>
+        <p style="color: var(--ink-dim);">X-Ledger publishes a documented REST API. We've reviewed it. Bringing accounts, ledgers, supplier and customer data into Milo is a one-day build. No charge.</p>
+        <span class="stack-tag">Built free</span>
+      </div>
+
+      <div class="stack-card" style="background: var(--white); border-color: var(--line);">
+        <div class="stack-card-head">
+          <div class="stack-icon" style="background: rgba(91, 168, 245, 0.1); border-color: rgba(91, 168, 245, 0.25); color: #2E7AC4;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+          </div>
+          <span class="stack-name" style="color: var(--ink-muted);">4Human</span>
+        </div>
+        <h3 style="color: var(--ink);">Built free, in a day</h3>
+        <p style="color: var(--ink-dim);">4Human exposes its data via API. Employees, time, absences, payroll source data. Same treatment as X-Ledger, no charge to add.</p>
+        <span class="stack-tag">Built free</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- THE PILOT -->
+<div class="squeegee-divider" aria-hidden="true"></div>
+<section class="band band-white">
+  <div class="page">
+    <div class="kicker">The pilot · Two weeks · No fee</div>
+    <h2>Get hands on it before you decide. <span class="em">No invoice until you've used it.</span></h2>
+    <p class="lede">
+      Liam's offer on the call stands. Skip the proof of concept fee, skip the commercial conversation. Get you, your brother and your top four set up with Milo connected to Salesforce. Use it. Show middle management. Decide from there.
+    </p>
+
+    <div class="pilot">
+      <div class="pilot-cell">
+        <div class="pilot-num">01</div>
+        <div><h3>Salesforce connected</h3><p>Plug-and-play. Your work orders, accounts, custom fields, child records, all visible to Milo.</p></div>
+      </div>
+      <div class="pilot-cell">
+        <div class="pilot-num">02</div>
+        <div><h3>Six users</h3><p>You, your brother, the four people you trust to actually push it. Web, Slack or Teams, your choice.</p></div>
+      </div>
+      <div class="pilot-cell">
+        <div class="pilot-num">03</div>
+        <div><h3>Read-only by default</h3><p>Nothing writes back to Salesforce during the pilot. We can scope a write-back use case later if it earns its place.</p></div>
+      </div>
+      <div class="pilot-cell">
+        <div class="pilot-num">04</div>
+        <div><h3>Hosted in Frankfurt on AWS</h3><p>ISO 27001 and SOC 2. We can move to your own region or your own servers if you proceed.</p></div>
+      </div>
+      <div class="pilot-cell">
+        <div class="pilot-num">05</div>
+        <div><h3>Direct line to our CTO</h3><p>Sebastian, our co-founder and CTO, on a shared channel for the two weeks. Built the original deployment for BetGames in iGaming.</p></div>
+      </div>
+      <div class="pilot-cell">
+        <div class="pilot-num">06</div>
+        <div><h3>Walk away cleanly</h3><p>If it doesn't earn its place after two weeks, your data is returned, your connection is revoked, no invoice.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMMERCIALS (after pilot) -->
+<div class="squeegee-divider" aria-hidden="true"></div>
+<section class="band band-alt">
+  <div class="page">
+    <div class="kicker">If you proceed · Commercials</div>
+    <h2>One number after the pilot. <span class="em">Everything included.</span></h2>
+    <p class="lede">
+      No seat licensing, no per-query compute charges, no module upgrades. As many users as you want, as many integrations as you want. The only line that varies is interaction overage if you go above the included envelope.
+    </p>
+
+    <div class="comm">
+      <div class="comm-top">
+        <div class="comm-headline">
+          <div class="comm-price">€1,500<span class="comm-price-unit">/ month</span></div>
+          <div class="comm-price-sub">Invoiced in NOK · all features · all users · all integrations</div>
+          <ul class="comm-includes">
+            <li>500 interactions per month</li>
+            <li>Unlimited users across Elite</li>
+            <li>Salesforce, X-Ledger and 4Human included</li>
+            <li>Web, Slack, WhatsApp, Teams</li>
+            <li>Dashboards, automations, scheduled reports</li>
+            <li>RBAC, row-level security, full audit log</li>
+          </ul>
+        </div>
+        <div class="comm-terms">
+          <div class="comm-row">
+            <div class="comm-row-label">Pilot</div>
+            <div class="comm-row-value"><strong>Two weeks. No fee.</strong> No commitment until you've actually used it.</div>
+          </div>
+          <div class="comm-row">
+            <div class="comm-row-label">Term, if you proceed</div>
+            <div class="comm-row-value"><strong>6 months</strong> with a break clause at month 6, or <strong>12 months</strong>. Your choice.</div>
+          </div>
+          <div class="comm-row">
+            <div class="comm-row-label">Hosting</div>
+            <div class="comm-row-value">Frankfurt on AWS by default. Any AWS or GCP region, or your own servers, on request at no extra charge. Norway-resident data is fine.</div>
+          </div>
+          <div class="comm-row">
+            <div class="comm-row-label">Integrations beyond the three</div>
+            <div class="comm-row-value">Anything else with an open API, built and added at <strong>no charge</strong>. Roughly 700+ are already pre-built.</div>
+          </div>
+          <div class="comm-row">
+            <div class="comm-row-label">Compliance</div>
+            <div class="comm-row-value">ISO 27001 and SOC 2. Audit log on every query, every export, every change.</div>
+          </div>
+        </div>
+      </div>
+      <div class="comm-bottom">
+        Quoted in Euros for clarity, invoiced in NOK at the prevailing rate. <strong>Pilot first, paper later.</strong>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SNAKK SIDEBAR -->
+<div class="squeegee-divider" aria-hidden="true"></div>
+<section class="band band-white">
+  <div class="page">
+    <div class="kicker">Side conversation · Snakk × Milo</div>
+    <h2>The voice agent angle. <span class="em">Worth a separate call.</span></h2>
+
+    <div class="snakk">
+      <div class="snakk-tag">Noted from the call</div>
+      <h3>"When are you coming to clean my house next time?"</h3>
+      <p>You floated the idea of Snakk fielding inbound calls and looking up the answer through Milo, rather than wiring Snakk directly into Salesforce's custom fields. Milo already does the schema work, so Snakk would ask Milo, not Salesforce. That's interesting on both sides.</p>
+      <p>Sebastian, our CTO, would like that conversation. If you reply to Liam with a couple of lines about Snakk's API surface and how you'd want to integrate, he'll set up a separate call with your lead programmer. Two products, one customer, useful precedent.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-mark">Milo × Elite</div>
+  <p class="footer-line">
+    Two weeks, no fee, Salesforce connected. <strong>Reply to Liam to start the pilot.</strong> X-Ledger and 4Human built in before week two if you want them in scope.
+  </p>
+  <div class="footer-meta">
+    Prepared by Liam<span class="sep">·</span>Milo<span class="sep">·</span>May 2026
+  </div>
+  <div class="footer-contact">
+    Questions: <a href="mailto:liam@askmilo.ai">liam@askmilo.ai</a>
+  </div>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('animate-in');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15, rootMargin: '0px 0px -80px 0px' });
+
+  ['.animate-target', '.heard-cell', '.duo-card', '.pilot-cell', '.stack-card', '.snakk'].forEach(sel => {
+    document.querySelectorAll(sel).forEach((el, i) => {
+      const col = (el.classList.contains('heard-cell') || el.classList.contains('pilot-cell') || el.classList.contains('stack-card')) ? (i % 2) : 0;
+      el.style.transitionDelay = `${col * 0.08}s`;
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(16px)';
+      el.classList.add('animate-target');
+      observer.observe(el);
+    });
+  });
+
+  document.querySelectorAll('.hero .animate-target').forEach((el, i) => {
+    setTimeout(() => el.classList.add('animate-in'), 180 + (i * 140));
+  });
+
+  // ── Squeegee reveal: triggers on scroll, replays on click ──
+  const reveal = document.getElementById('revealBlock');
+  if (reveal) {
+    const sweep = () => {
+      reveal.classList.remove('swept');
+      // restart the transition on the next frame
+      requestAnimationFrame(() => requestAnimationFrame(() => reveal.classList.add('swept')));
+    };
+
+    const revealObs = new IntersectionObserver((entries, obs) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          setTimeout(sweep, 250);
+          obs.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.45 });
+    revealObs.observe(reveal);
+
+    reveal.addEventListener('click', sweep);
+    reveal.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sweep(); }
+    });
+  }
+});
+</script>
+
+</body>
+</html>
