@@ -482,59 +482,88 @@ body {
   color: var(--glass-soft);
 }
 
-/* The squeegee bar that sweeps and reveals */
-.squeegee-bar {
-  position: absolute;
-  top: 0; bottom: 0;
-  left: 0;
-  width: 4px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(143, 197, 255, 0.7) 50%, rgba(255, 255, 255, 0.95) 100%);
-  box-shadow: 0 0 24px rgba(143, 197, 255, 0.55), 0 0 8px rgba(255, 255, 255, 0.6);
-  z-index: 4;
-  pointer-events: none;
-  transition: left 1.6s cubic-bezier(0.65, 0, 0.35, 1);
-}
-
-.squeegee-bar::before {
-  content: '';
-  position: absolute;
-  top: -20px; bottom: -20px;
-  left: -22px;
-  width: 22px;
-  background: linear-gradient(90deg, transparent, rgba(91, 168, 245, 0.18), rgba(143, 197, 255, 0.35));
-  filter: blur(6px);
-}
-
-.squeegee-bar::after {
-  content: '';
-  position: absolute;
-  top: -20px; bottom: -20px;
-  right: -10px;
-  width: 10px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.4), transparent);
-  filter: blur(3px);
-}
-
-/* The smudge overlay sitting on the clean side until squeegee passes */
+/* The smudge overlay sits on top of both panes until the squeegee passes */
 .smudge-overlay {
   position: absolute;
   top: 0; bottom: 0;
   left: 0; right: 0;
   background:
-    radial-gradient(circle at 25% 30%, rgba(120, 70, 30, 0.35) 0%, transparent 35%),
-    radial-gradient(circle at 70% 60%, rgba(140, 90, 40, 0.28) 0%, transparent 40%),
-    radial-gradient(circle at 45% 80%, rgba(160, 110, 60, 0.18) 0%, transparent 30%),
-    linear-gradient(120deg, rgba(80, 50, 30, 0.5) 0%, rgba(60, 40, 20, 0.25) 100%);
-  filter: blur(0.5px);
+    radial-gradient(circle at 18% 22%, rgba(220, 150, 90, 0.55) 0%, transparent 28%),
+    radial-gradient(circle at 62% 48%, rgba(180, 120, 70, 0.5) 0%, transparent 35%),
+    radial-gradient(circle at 88% 78%, rgba(210, 140, 80, 0.45) 0%, transparent 30%),
+    radial-gradient(circle at 38% 82%, rgba(160, 100, 60, 0.4) 0%, transparent 28%),
+    linear-gradient(120deg, rgba(110, 70, 40, 0.65) 0%, rgba(70, 50, 30, 0.5) 100%);
+  filter: blur(1.5px);
   z-index: 3;
   pointer-events: none;
-  transition: clip-path 1.6s cubic-bezier(0.65, 0, 0.35, 1);
-  clip-path: inset(0 0 0 0);
-  mix-blend-mode: screen;
+  transform-origin: right center;
+  transform: scaleX(1);
+  transition: transform 2s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
-.reveal-block.swept .squeegee-bar { left: 100%; }
-.reveal-block.swept .smudge-overlay { clip-path: inset(0 0 0 100%); }
+/* A streaky water texture layered on top of the smudge */
+.smudge-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(105deg,
+      transparent 0,
+      transparent 8px,
+      rgba(255, 255, 255, 0.05) 9px,
+      transparent 11px),
+    repeating-linear-gradient(95deg,
+      transparent 0,
+      transparent 14px,
+      rgba(140, 90, 50, 0.08) 15px,
+      transparent 17px);
+  mix-blend-mode: overlay;
+}
+
+/* The squeegee bar slides across with the smudge */
+.squeegee-bar {
+  position: absolute;
+  top: -10px; bottom: -10px;
+  left: 0;
+  width: 6px;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(180, 220, 255, 0.85) 30%,
+    rgba(91, 168, 245, 0.9) 50%,
+    rgba(180, 220, 255, 0.85) 70%,
+    rgba(255, 255, 255, 0.95) 100%);
+  box-shadow:
+    0 0 24px rgba(143, 197, 255, 0.7),
+    0 0 8px rgba(255, 255, 255, 0.85),
+    inset 0 0 4px rgba(255, 255, 255, 0.6);
+  border-radius: 2px;
+  z-index: 4;
+  pointer-events: none;
+  transition: left 2s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.squeegee-bar::before {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  left: -34px;
+  width: 34px;
+  background: linear-gradient(90deg, transparent, rgba(143, 197, 255, 0.22), rgba(180, 220, 255, 0.45));
+  filter: blur(8px);
+}
+
+.squeegee-bar::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  right: -14px;
+  width: 14px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.5), transparent);
+  filter: blur(4px);
+}
+
+.reveal-block.swept .smudge-overlay { transform: scaleX(0); }
+.reveal-block.swept .squeegee-bar { left: calc(100% - 6px); }
 
 .reveal-foot {
   padding: 14px 24px;
@@ -1141,8 +1170,8 @@ p strong, li strong { font-weight: 700; color: var(--ink); }
   .reveal-pane { grid-template-columns: 1fr; }
   .reveal-side.dirty { border-right: none; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
   .squeegee-bar { display: none; }
-  .smudge-overlay { clip-path: inset(50% 0 0 0); }
-  .reveal-block.swept .smudge-overlay { clip-path: inset(100% 0 0 0); }
+  .smudge-overlay { transform-origin: bottom center; }
+  .reveal-block.swept .smudge-overlay { transform: scaleY(0); }
   .hero-facade { height: 160px; }
 }
 
@@ -1368,29 +1397,6 @@ p strong, li strong { font-weight: 700; color: var(--ink); }
   </div>
 </section>
 
-<!-- REFERENCE / TRACK RECORD -->
-<div class="squeegee-divider" aria-hidden="true"></div>
-<section class="band band-white">
-  <div class="page">
-    <div class="kicker">Why this works for messy, custom data</div>
-    <h2>Built for BetGames. <span class="em">Sized for everyone since.</span></h2>
-    <p class="lede">
-      Milo's first deployment was BetGames in iGaming. Hundreds of disparate technologies, billions of transactions a day, a Power BI estate that nobody could get a straight answer out of. They migrated entirely off Power BI onto Milo. The reason it works for that case is the same reason it works for yours: the agent doesn't care how unusual your shape is, because the structure lives in the Data Studio rather than being asked of the model on every query.
-    </p>
-
-    <div class="duo-grid">
-      <div class="duo-card" style="background: var(--bg-alt);">
-        <h3>Persistent context, not stateless prompts</h3>
-        <p>Most "AI on top of your CRM" demos forget your schema between sessions. Milo's Data Studio is the part that remembers. Tables, joins, custom fields, business definitions, the parent-child rule for work orders. Configured once, referenced on every query.</p>
-      </div>
-      <div class="duo-card" style="background: var(--bg-alt);">
-        <h3>Deterministic compute on top of an LLM</h3>
-        <p>The model picks the question, then a code engine runs the answer. So "how many open work orders without a cleaner assigned" returns the same number tomorrow as today, with a query you can audit. No tokenwise arithmetic, no drift.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- THE STACK / INTEGRATIONS -->
 <div class="squeegee-divider" aria-hidden="true"></div>
 <section class="band band-alt" style="position: relative; overflow: hidden;">
@@ -1478,7 +1484,7 @@ p strong, li strong { font-weight: 700; color: var(--ink); }
       </div>
       <div class="pilot-cell">
         <div class="pilot-num">05</div>
-        <div><h3>Direct line to our CTO</h3><p>Sebastian, our co-founder and CTO, on a shared channel for the two weeks. Built the original deployment for BetGames in iGaming.</p></div>
+        <div><h3>Direct line to our CTO</h3><p>Sebastian, our co-founder and CTO, on a shared channel for the two weeks. Originally built Milo for an iGaming operator handling billions of transactions a day, so messy and high-volume data is the comfortable end of the room.</p></div>
       </div>
       <div class="pilot-cell">
         <div class="pilot-num">06</div>
@@ -1542,22 +1548,6 @@ p strong, li strong { font-weight: 700; color: var(--ink); }
   </div>
 </section>
 
-<!-- SNAKK SIDEBAR -->
-<div class="squeegee-divider" aria-hidden="true"></div>
-<section class="band band-white">
-  <div class="page">
-    <div class="kicker">Side conversation · Snakk × Milo</div>
-    <h2>The voice agent angle. <span class="em">Worth a separate call.</span></h2>
-
-    <div class="snakk">
-      <div class="snakk-tag">Noted from the call</div>
-      <h3>"When are you coming to clean my house next time?"</h3>
-      <p>You floated the idea of Snakk fielding inbound calls and looking up the answer through Milo, rather than wiring Snakk directly into Salesforce's custom fields. Milo already does the schema work, so Snakk would ask Milo, not Salesforce. That's interesting on both sides.</p>
-      <p>Sebastian, our CTO, would like that conversation. If you reply to Liam with a couple of lines about Snakk's API surface and how you'd want to integrate, he'll set up a separate call with your lead programmer. Two products, one customer, useful precedent.</p>
-    </div>
-  </div>
-</section>
-
 <!-- FOOTER -->
 <footer class="footer">
   <div class="footer-mark">Milo × Elite</div>
@@ -1601,20 +1591,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Squeegee reveal: triggers on scroll, replays on click ──
   const reveal = document.getElementById('revealBlock');
   if (reveal) {
+    const smudge = reveal.querySelector('.smudge-overlay');
+    const bar = reveal.querySelector('.squeegee-bar');
+
     const sweep = () => {
+      // Snap back instantly with the transition disabled
       reveal.classList.remove('swept');
-      // restart the transition on the next frame
+      if (smudge) smudge.style.transition = 'none';
+      if (bar) bar.style.transition = 'none';
+      // Force a reflow so the snap registers
+      void reveal.offsetWidth;
+      // Restore transitions and play the sweep
+      if (smudge) smudge.style.transition = '';
+      if (bar) bar.style.transition = '';
       requestAnimationFrame(() => requestAnimationFrame(() => reveal.classList.add('swept')));
     };
 
     const revealObs = new IntersectionObserver((entries, obs) => {
       entries.forEach(e => {
         if (e.isIntersecting) {
-          setTimeout(sweep, 250);
+          setTimeout(sweep, 350);
           obs.unobserve(e.target);
         }
       });
-    }, { threshold: 0.45 });
+    }, { threshold: 0.25 });
     revealObs.observe(reveal);
 
     reveal.addEventListener('click', sweep);
