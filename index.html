@@ -1747,6 +1747,51 @@ p strong, li strong { font-weight: 700; color: var(--ink); }
         First thing we apply when the POC starts. Any further refinements like this get the same treatment — no code, no cost, fixed in the session.
       </div>
     </div>
+
+    <!-- Write-back callout -->
+    <div class="fix-callout" style="margin-top: 20px;">
+      <div class="fix-callout-top">
+        <div class="fix-side issue">
+          <div class="fix-side-label issue-label"><span class="status-dot"></span>You asked on the call</div>
+          <h4>Can Milo push data back into Salesforce?</h4>
+          <p>On the call you mentioned that being read-only would limit the value. The question was whether Milo could actually write back — creating records, updating statuses, closing work orders — rather than just surfacing information.</p>
+          <p>The answer is yes. And it works from the same place you ask questions.</p>
+        </div>
+        <div class="fix-side resolved">
+          <div class="fix-side-label resolve-label"><span class="status-dot"></span>Actions — available when you're ready</div>
+          <h4>Create, update or delete any Salesforce record — via Slack, WhatsApp, Teams or Milo web</h4>
+          <p>Milo's Actions feature enables full write-back to Salesforce. It's off by default during the POC (read-only keeps things safe while you're evaluating), but can be switched on for specific use cases the moment you want it.</p>
+          <div style="background: var(--bg-alt); border: 1px solid var(--line); border-radius: 8px; padding: 14px 18px; margin: 12px 0;">
+            <div style="font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 10px;">What actions can do</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+              <div style="font-size: 0.84rem; color: var(--ink-dim); padding-left: 14px; position: relative;">
+                <span style="position: absolute; left: 0; color: var(--sky); font-weight: 700;">✓</span> Create accounts, contacts, work orders
+              </div>
+              <div style="font-size: 0.84rem; color: var(--ink-dim); padding-left: 14px; position: relative;">
+                <span style="position: absolute; left: 0; color: var(--sky); font-weight: 700;">✓</span> Update statuses and custom fields
+              </div>
+              <div style="font-size: 0.84rem; color: var(--ink-dim); padding-left: 14px; position: relative;">
+                <span style="position: absolute; left: 0; color: var(--sky); font-weight: 700;">✓</span> Single records or batch up to 200
+              </div>
+              <div style="font-size: 0.84rem; color: var(--ink-dim); padding-left: 14px; position: relative;">
+                <span style="position: absolute; left: 0; color: var(--sky); font-weight: 700;">✓</span> Any standard or custom object
+              </div>
+              <div style="font-size: 0.84rem; color: var(--ink-dim); padding-left: 14px; position: relative;">
+                <span style="position: absolute; left: 0; color: var(--sky); font-weight: 700;">✓</span> Via Slack, WhatsApp, Teams or web
+              </div>
+              <div style="font-size: 0.84rem; color: var(--ink-dim); padding-left: 14px; position: relative;">
+                <span style="position: absolute; left: 0; color: var(--sky); font-weight: 700;">✓</span> Checks field types &amp; relationships first
+              </div>
+            </div>
+          </div>
+          <p style="font-size: 0.84rem; color: var(--ink-dim);">Example: "Close all overdue work orders in Vest as completed" — Milo confirms the batch, you approve, it runs. No Salesforce login needed.</p>
+        </div>
+      </div>
+      <div class="fix-bottom" style="background: rgba(91,168,245,0.06); border-color: rgba(91,168,245,0.2); color: #1A5CA8;">
+        Read-only by default during the POC. Actions can be enabled for specific use cases the moment you're ready — no development required.
+      </div>
+    </div>
+
   </div>
 </section>
 
