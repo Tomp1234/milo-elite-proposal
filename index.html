@@ -937,18 +937,17 @@ p strong, li strong { font-weight: 700; color: var(--ink); }
 }
 
 .insight-note {
-  font-family: var(--mono);
-  font-size: 0.7rem;
-  color: rgba(255,255,255,0.35);
-  line-height: 1.55;
-  padding-top: 10px;
-  border-top: 1px dashed rgba(255,255,255,0.1);
-  letter-spacing: 0.01em;
+  font-size: 0.84rem;
+  color: rgba(255,255,255,0.6);
+  line-height: 1.6;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(255,255,255,0.15);
 }
 
 .insight-note::before {
-  content: 'vs Claude+Excel → ';
-  color: rgba(255,255,255,0.2);
+  content: 'vs Claude+Excel — ';
+  font-weight: 700;
+  color: rgba(255,255,255,0.4);
 }
 
 /* ── Stack (integrations) ─────────────── */
@@ -1756,7 +1755,7 @@ p strong, li strong { font-weight: 700; color: var(--ink); }
 <section class="band band-dark">
   <div class="page">
     <div class="kicker">From your Salesforce data alone · Week one</div>
-    <h2>Without being asked, <span class="em">Milo surfaced this.</span></h2>
+    <h2>So far... <span class="em">Milo surfaced this.</span></h2>
     <p class="lede">
       Connected only to Salesforce — no X-Ledger, no 4Human. Each finding is shown with a note on what a Claude-plus-Excel workflow would have needed to know to ask for it. None of these surface automatically.
     </p>
