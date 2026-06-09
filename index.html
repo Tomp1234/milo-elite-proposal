@@ -1779,14 +1779,6 @@ p strong, li strong { font-weight: 700; color: var(--ink); }
 
     <div class="fix-callout">
       <div class="fix-callout-top">
-        <div class="fix-side issue">
-          <div class="fix-side-label issue-label"><span class="status-dot"></span>The issue</div>
-          <h4>Milo was counting child orders as separate jobs</h4>
-          <p>When asked "show me overdue work orders," Milo counted every record in the work orders table — including sub-tasks sitting underneath a parent job. This made numbers look bigger than reality and mixed up jobs with line items within a job.</p>
-          <div class="fix-analogy">
-            Think of it like this: a cleaning job for a building with 5 floors is stored in Salesforce as 1 parent work order (the job) + 5 child orders (one per floor). Without guidance, Milo was counting that as 6 overdue items instead of 1.
-          </div>
-        </div>
         <div class="fix-side resolved">
           <div class="fix-side-label resolve-label"><span class="status-dot"></span>The fix · Day one of the POC</div>
           <h4>One rule added to Milo's knowledge base</h4>
